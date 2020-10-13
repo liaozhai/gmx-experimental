@@ -1,9 +1,13 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import './index.css';
 
 window.addEventListener('load', () => {
     let map = L.map(document.body);
     map.setView([51.505, -0.09], 13);
+	L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+	}).addTo(map);
     // let controllers = new Map<string, Controller>();
     // controllers.set('default', new DefaultController('default'));
     // let views = new Map<string, View>();
