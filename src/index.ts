@@ -8,10 +8,4 @@ window.addEventListener('load', () => {
 	L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 		attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 	}).addTo(map);
-    // let controllers = new Map<string, Controller>();
-    // controllers.set('default', new DefaultController('default'));
-    // let views = new Map<string, View>();
-    // views.set('default', new DefaultView('default'));
-    // let app = new Application(['default'], controllers, views);    
-    // app.start();    
 });
