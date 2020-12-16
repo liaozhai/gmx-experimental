@@ -2,27 +2,16 @@ import L, { Coords } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './index.css';
 
-// const tile_key = (coords:Coords) => {
-// 	const {x, y, z} = coords;
-// 	return [x,y,z].join(':');
-// };
-
-// let done:L.DoneCallback;
-
 const CanvasLayer = L.GridLayer.extend({
-    createTile: function(coords:Coords) {
-		// done = fn;
-        // create a <canvas> element for drawing
+    createTile: function(coords:Coords) {		
 		let tile = L.DomUtil.create('canvas', 'leaflet-tile') as HTMLCanvasElement;		
-		// tiles.set(tileKey, tile);
-        // setup tile width and height according to the options
-        let size = this.getTileSize();
-        tile.width = size.x;
-		tile.height = size.y;			
+		
+		const {x, y} = this.getTileSize();
+        tile.width = x;
+		tile.height = y;
 
-        // draw something asynchronously and pass the tile to the done() callback
-        drawTestTile(coords, tile);
-
+		drawTestTile(coords, tile);
+		
         return tile;
 	},
 	getTile: function (key:string) {
@@ -33,7 +22,7 @@ const CanvasLayer = L.GridLayer.extend({
 const testLayer = new CanvasLayer();
 
 window.addEventListener('load', () => {
-    let map = L.map(document.body);
+    const map = L.map(document.body);
     map.setView([55.764213, 37.617187], 13);
 	L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 		attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -53,14 +42,13 @@ const worker = new Worker("renderer.js");
 
 worker.onmessage = (msg:MessageEvent) => {	
 	const {tileKey} = msg.data;		
-	const tile = testLayer.getTile(tileKey);
-	// done(undefined, el);
-	testLayer._tileReady(tile.coords, undefined, tile.el);
+	const {coords, el} = testLayer.getTile(tileKey);	
+	testLayer._tileReady(coords, undefined, el);
 
 };
 
 const drawTestTile = function(coords:Coords, tile:HTMLCanvasElement) {
-	let canvas = tile.transferControlToOffscreen();	
+	const canvas = tile.transferControlToOffscreen();	
 	worker.postMessage({
 		cmd: 'drawTestTile',
 		coords,

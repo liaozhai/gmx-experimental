@@ -14079,22 +14079,16 @@
 
 	});
 
-	// 	const {x, y, z} = coords;
-	// 	return [x,y,z].join(':');
-	// };
-	// let done:L.DoneCallback;
-
 	var CanvasLayer = leafletSrc.GridLayer.extend({
 	  createTile: function createTile(coords) {
-	    // done = fn;
-	    // create a <canvas> element for drawing
-	    var tile = leafletSrc.DomUtil.create('canvas', 'leaflet-tile'); // tiles.set(tileKey, tile);
-	    // setup tile width and height according to the options
+	    var tile = leafletSrc.DomUtil.create('canvas', 'leaflet-tile');
 
-	    var size = this.getTileSize();
-	    tile.width = size.x;
-	    tile.height = size.y; // draw something asynchronously and pass the tile to the done() callback
+	    var _this$getTileSize = this.getTileSize(),
+	        x = _this$getTileSize.x,
+	        y = _this$getTileSize.y;
 
+	    tile.width = x;
+	    tile.height = y;
 	    drawTestTile(coords, tile);
 	    return tile;
 	  },
@@ -14120,9 +14114,12 @@
 
 	worker.onmessage = function (msg) {
 	  var tileKey = msg.data.tileKey;
-	  var tile = testLayer.getTile(tileKey); // done(undefined, el);
 
-	  testLayer._tileReady(tile.coords, undefined, tile.el);
+	  var _testLayer$getTile = testLayer.getTile(tileKey),
+	      coords = _testLayer$getTile.coords,
+	      el = _testLayer$getTile.el;
+
+	  testLayer._tileReady(coords, undefined, el);
 	};
 
 	var drawTestTile = function drawTestTile(coords, tile) {
