@@ -14085,7 +14085,7 @@
 	// let done:L.DoneCallback;
 
 	var CanvasLayer = leafletSrc.GridLayer.extend({
-	  createTile: function createTile(coords, fn) {
+	  createTile: function createTile(coords) {
 	    // done = fn;
 	    // create a <canvas> element for drawing
 	    var tile = leafletSrc.DomUtil.create('canvas', 'leaflet-tile'); // tiles.set(tileKey, tile);

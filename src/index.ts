@@ -10,7 +10,7 @@ import './index.css';
 // let done:L.DoneCallback;
 
 const CanvasLayer = L.GridLayer.extend({
-    createTile: function(coords:Coords, fn:L.DoneCallback) {				
+    createTile: function(coords:Coords) {
 		// done = fn;
         // create a <canvas> element for drawing
 		let tile = L.DomUtil.create('canvas', 'leaflet-tile') as HTMLCanvasElement;		
