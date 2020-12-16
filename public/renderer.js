@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var _self = self;
+    var _self = self instanceof Worker && self;
 
     onmessage = function onmessage(evt) {
       var _evt$data = evt.data,
@@ -33,7 +33,7 @@
         ctx.fillText(tileKey, 128 - textMetrics.width / 2, 100);
         ctx.stroke(); // console.log('render', tileKey);
 
-        _self.postMessage({
+        _self && _self.postMessage({
           tileKey: tileKey,
           cmd: 'render',
           res: 'done'
