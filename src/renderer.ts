@@ -1,4 +1,4 @@
-const _self = self;
+const _self = (window.self instanceof Worker) && window.self as Worker;
 
 onmessage = function(evt:MessageEvent) {
     const {data: {coords, canvas}} = evt;        
@@ -28,7 +28,7 @@ onmessage = function(evt:MessageEvent) {
         ctx.stroke();
 
         // console.log('render', tileKey);
-        _self.postMessage({
+        _self && _self.postMessage({
             tileKey,
             cmd: 'render',
             res: 'done'
