@@ -7,11 +7,11 @@ import './index.css';
 // 	return [x,y,z].join(':');
 // };
 
-let done:L.DoneCallback;
+// let done:L.DoneCallback;
 
 const CanvasLayer = L.GridLayer.extend({
     createTile: function(coords:Coords, fn:L.DoneCallback) {				
-		done = fn;
+		// done = fn;
         // create a <canvas> element for drawing
 		let tile = L.DomUtil.create('canvas', 'leaflet-tile') as HTMLCanvasElement;		
 		// tiles.set(tileKey, tile);
@@ -53,8 +53,10 @@ const worker = new Worker("renderer.js");
 
 worker.onmessage = (msg:MessageEvent) => {	
 	const {tileKey} = msg.data;		
-	const {el} = testLayer.getTile(tileKey);
-	done(undefined, el);
+	const tile = testLayer.getTile(tileKey);
+	// done(undefined, el);
+	testLayer._tileReady(tile.coords, undefined, tile.el);
+
 };
 
 const drawTestTile = function(coords:Coords, tile:HTMLCanvasElement) {

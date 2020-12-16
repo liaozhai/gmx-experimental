@@ -1,4 +1,5 @@
-const _self = (self instanceof Worker) && self as Worker;
+const _self = self;
+// const _self = (self instanceof Worker) && self as Worker;
 
 onmessage = function(evt:MessageEvent) {
     const {data: {coords, canvas}} = evt;        

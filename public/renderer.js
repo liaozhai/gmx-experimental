@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var _self = self instanceof Worker && self;
+    var _self = self; // const _self = (self instanceof Worker) && self as Worker;
 
     onmessage = function onmessage(evt) {
       var _evt$data = evt.data,

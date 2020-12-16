@@ -14081,12 +14081,12 @@ var leafletSrc = createCommonjsModule(function (module, exports) {
 // 	const {x, y, z} = coords;
 // 	return [x,y,z].join(':');
 // };
+// let done:L.DoneCallback;
 
-var done;
 var CanvasLayer = leafletSrc.GridLayer.extend({
   createTile: function createTile(coords, fn) {
-    done = fn; // create a <canvas> element for drawing
-
+    // done = fn;
+    // create a <canvas> element for drawing
     var tile = leafletSrc.DomUtil.create('canvas', 'leaflet-tile'); // tiles.set(tileKey, tile);
     // setup tile width and height according to the options
 
@@ -14119,11 +14119,9 @@ var worker = new Worker("renderer.js");
 
 worker.onmessage = function (msg) {
   var tileKey = msg.data.tileKey;
+  var tile = testLayer.getTile(tileKey); // done(undefined, el);
 
-  var _testLayer$getTile = testLayer.getTile(tileKey),
-      el = _testLayer$getTile.el;
-
-  done(undefined, el);
+  testLayer._tileReady(tile.coords, undefined, tile.el);
 };
 
 var drawTestTile = function drawTestTile(coords, tile) {
