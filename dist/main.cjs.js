@@ -14110,7 +14110,11 @@ var CanvasLayer = leafletSrc.GridLayer.extend({
   getTile: function getTile(key) {
     return this._tiles[key];
   },
-  setFilter: function setFilter(fn) {},
+  setTileReady: function setTileReady(key) {
+    var tile = this.getTile(key);
+
+    this._tileReady(tile.coords, undefined, tile.el);
+  },
   drawTile: function drawTile(coords, tile) {
     var canvas = tile.transferControlToOffscreen();
 
@@ -14122,20 +14126,23 @@ var CanvasLayer = leafletSrc.GridLayer.extend({
   }
 });
 var testLayer = new CanvasLayer();
-var filter = new Worker('filter.js');
-filter.postMessage({
-  text: 'A > B'
-});
 window.addEventListener('load', function () {
   var map = leafletSrc.map(document.body);
   map.setView([55.764213, 37.617187], 13);
   leafletSrc.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
-  testLayer.addTo(map); // let controllers = new Map<string, Controller>();
-  // controllers.set('default', new DefaultController('default'));
-  // let views = new Map<string, View>();
-  // views.set('default', new DefaultView('default'));
-  // let app = new Application(['default'], controllers, views);    
-  // app.start();    
+  testLayer.addTo(map);
+});
+var dataManager = new Worker("dataManager.js");
+
+dataManager.onmessage = function (msg) {
+  console.log('Main dataManager', msg.data);
+};
+
+dataManager.postMessage({
+  cmd: 'addLayer',
+  hostName: 'maps.kosmosnimki.ru/',
+  id: '8EE2C7996800458AAF70BABB43321FA4' // AISDaily
+
 });

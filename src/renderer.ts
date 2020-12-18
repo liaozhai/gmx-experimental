@@ -1,5 +1,3 @@
-const _self = (self instanceof Worker) && self as Worker;
-
 onmessage = function(evt:MessageEvent) {
     const {data: {coords, canvas}} = evt;        
     // const gl = canvas.getContext("webgl");
@@ -28,12 +26,13 @@ onmessage = function(evt:MessageEvent) {
         ctx.stroke();
 
         // console.log('render', tileKey);
-        _self && _self.postMessage({
+        
+        self.postMessage({
             tileKey,
             cmd: 'render',
             res: 'done'
         });
+                
     }
     requestAnimationFrame(render);     
 };
-

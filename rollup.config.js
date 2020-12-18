@@ -63,21 +63,12 @@ export default [
         ],    
     },
     {
-<<<<<<< HEAD
-        input: './src/filter.ts',
-        output: [            
-            {
-                file: 'public/filter.js',
-                format: 'iife',
-                name: 'Filter',
-=======
         input: './src/dataManager.ts',
         output: [            
             {
                 file: 'public/dataManager.js',
                 format: 'iife',
                 name: 'DataManager',
->>>>>>> 35d70c10fd430b77e5d1e526817c813fb38641bf
                 sourcemap: true,
             }
         ],
