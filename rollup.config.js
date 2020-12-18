@@ -62,4 +62,25 @@ export default [
             }),
         ],    
     },
+    {
+        input: './src/filter.ts',
+        output: [            
+            {
+                file: 'public/filter.js',
+                format: 'iife',
+                name: 'Filter',
+                sourcemap: true,
+            }
+        ],
+        external: [],
+        plugins: [    
+            resolve({ extensions }),
+            commonjs(),            
+            babel({
+                extensions,
+                babelHelpers: 'bundled',
+                include: ['src/**/*'],
+            }),
+        ],    
+    },
 ];

@@ -2,7 +2,7 @@
     "compilerOptions": {
         "allowSyntheticDefaultImports": true,
         "noFallthroughCasesInSwitch": true,
-        "noUnusedParameters": true,
+        "noUnusedParameters": false,
         "noImplicitReturns": true,
         "moduleResolution": "node",
         "esModuleInterop": true,
@@ -12,7 +12,8 @@
         "declaration": true,
         "target": "esnext",
         "module": "esnext",
-        "strict": true
+        "strict": true,
+        "lib": ["ES2020", "DOM"]
       },
       "include": [
         "src/**/*"

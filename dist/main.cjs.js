@@ -14079,6 +14079,22 @@ var leafletSrc = createCommonjsModule(function (module, exports) {
 });
 
 var CanvasLayer = leafletSrc.GridLayer.extend({
+  initialize: function initialize(name, options) {
+    var _this = this;
+
+    options = leafletSrc.Util.setOptions(this, options);
+    this._worker = new Worker("renderer.js");
+
+    this._worker.onmessage = function (msg) {
+      var tileKey = msg.data.tileKey;
+
+      var _this$getTile = _this.getTile(tileKey),
+          coords = _this$getTile.coords,
+          el = _this$getTile.el;
+
+      _this._tileReady(coords, undefined, el);
+    };
+  },
   createTile: function createTile(coords) {
     var tile = leafletSrc.DomUtil.create('canvas', 'leaflet-tile');
 
@@ -14088,14 +14104,28 @@ var CanvasLayer = leafletSrc.GridLayer.extend({
 
     tile.width = x;
     tile.height = y;
-    drawTestTile(coords, tile);
+    this.drawTile(coords, tile);
     return tile;
   },
   getTile: function getTile(key) {
     return this._tiles[key];
+  },
+  setFilter: function setFilter(fn) {},
+  drawTile: function drawTile(coords, tile) {
+    var canvas = tile.transferControlToOffscreen();
+
+    this._worker.postMessage({
+      cmd: 'drawTestTile',
+      coords: coords,
+      canvas: canvas
+    }, [canvas]);
   }
 });
 var testLayer = new CanvasLayer();
+var filter = new Worker('filter.js');
+filter.postMessage({
+  text: 'A > B'
+});
 window.addEventListener('load', function () {
   var map = leafletSrc.map(document.body);
   map.setView([55.764213, 37.617187], 13);
@@ -14109,23 +14139,3 @@ window.addEventListener('load', function () {
   // let app = new Application(['default'], controllers, views);    
   // app.start();    
 });
-var worker = new Worker("renderer.js");
-
-worker.onmessage = function (msg) {
-  var tileKey = msg.data.tileKey;
-
-  var _testLayer$getTile = testLayer.getTile(tileKey),
-      coords = _testLayer$getTile.coords,
-      el = _testLayer$getTile.el;
-
-  testLayer._tileReady(coords, undefined, el);
-};
-
-var drawTestTile = function drawTestTile(coords, tile) {
-  var canvas = tile.transferControlToOffscreen();
-  worker.postMessage({
-    cmd: 'drawTestTile',
-    coords: coords,
-    canvas: canvas
-  }, [canvas]);
-};
