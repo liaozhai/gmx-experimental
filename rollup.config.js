@@ -62,4 +62,25 @@ export default [
             }),
         ],    
     },
+    {
+        input: './src/dataManager.ts',
+        output: [            
+            {
+                file: 'public/dataManager.js',
+                format: 'iife',
+                name: 'DataManager',
+                sourcemap: true,
+            }
+        ],
+        external: [],
+        plugins: [    
+            resolve({ extensions }),
+            commonjs(),            
+            babel({
+                extensions,
+                babelHelpers: 'bundled',
+                include: ['src/**/*'],
+            }),
+        ],    
+    },
 ];

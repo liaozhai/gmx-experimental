@@ -33,13 +33,7 @@ window.addEventListener('load', () => {
 	}).addTo(map);
 
 	testLayer.addTo(map);
-
-    // let controllers = new Map<string, Controller>();
-    // controllers.set('default', new DefaultController('default'));
-    // let views = new Map<string, View>();
-    // views.set('default', new DefaultView('default'));
-    // let app = new Application(['default'], controllers, views);    
-    // app.start();    
+  
 });
 
 const worker = new Worker("renderer.js");
@@ -57,5 +51,16 @@ const drawTestTile = function(coords:Coords, tile:HTMLCanvasElement) {
 		canvas,
 	}, [canvas]);
 };
+
+const dataManager = new Worker("dataManager.js");
+
+dataManager.onmessage = (msg:MessageEvent) => {	
+	console.log('Main dataManager', msg.data);
+};
+dataManager.postMessage({
+	cmd: 'addLayer',
+	hostName: 'maps.kosmosnimki.ru/',
+	id: '8EE2C7996800458AAF70BABB43321FA4', // AISDaily
+});
 
 
