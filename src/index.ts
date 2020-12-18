@@ -16,6 +16,10 @@ const CanvasLayer = L.GridLayer.extend({
 	},
 	getTile: function (key:string) {
 		return this._tiles[key];
+	},
+	setTileReady: function (key:string) {
+		const tile = this.getTile(key);
+		this._tileReady(tile.coords, undefined, tile.el);
 	}
 });
 
@@ -42,9 +46,7 @@ const worker = new Worker("renderer.js");
 
 worker.onmessage = (msg:MessageEvent) => {	
 	const {tileKey} = msg.data;		
-	const {coords, el} = testLayer.getTile(tileKey);	
-	testLayer._tileReady(coords, undefined, el);
-
+	testLayer.setTileReady(tileKey);
 };
 
 const drawTestTile = function(coords:Coords, tile:HTMLCanvasElement) {
