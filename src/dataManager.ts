@@ -165,8 +165,8 @@ const chkVersion = () => {
 							}
 						}
 						pt.hostName = host;
-						// pt.tiles = it.tiles;
-						pt.tiles = it.tiles.slice(0, 12);
+						pt.tiles = it.tiles;
+						// pt.tiles = it.tiles.slice(0, 12);
 						pt.tilesOrder = it.tilesOrder;
 						pt.tilesPromise = TilesLoader.load(pt);
 						Promise.all(Object.values(pt.tilesPromise)).then((res) => {
