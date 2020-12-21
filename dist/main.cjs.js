@@ -14078,6 +14078,58 @@ var leafletSrc = createCommonjsModule(function (module, exports) {
 
 });
 
+var Utils = {
+  getNormalizeBounds: function getNormalizeBounds(screenBounds) {
+    // get bounds array from -180 180 lng
+    var northWest = screenBounds.getNorthWest();
+    var southEast = screenBounds.getSouthEast();
+    var minX = northWest.lng,
+        maxX = southEast.lng;
+    var w = (maxX - minX) / 2;
+    var minX1,
+        maxX1,
+        out = [];
+
+    if (w >= 180) {
+      minX = -180;
+      maxX = 180;
+    } else if (maxX > 180 || minX < -180) {
+      var center = (maxX + minX) / 2 % 360;
+
+      if (center > 180) {
+        center -= 360;
+      } else if (center < -180) {
+        center += 360;
+      }
+
+      minX = center - w;
+      maxX = center + w;
+
+      if (minX < -180) {
+        minX1 = minX + 360;
+        maxX1 = 180;
+        minX = -180;
+      } else if (maxX > 180) {
+        minX1 = -180;
+        maxX1 = maxX - 360;
+        maxX = 180;
+      }
+    }
+
+    var m1 = leafletSrc.Projection.Mercator.project(leafletSrc.latLng([southEast.lat, minX]));
+    var m2 = leafletSrc.Projection.Mercator.project(leafletSrc.latLng([northWest.lat, maxX]));
+    out.push([m1.x, m1.y, m2.x, m2.y]);
+
+    if (minX1) {
+      var m11 = leafletSrc.Projection.Mercator.project(leafletSrc.latLng([southEast.lat, minX1]));
+      var m12 = leafletSrc.Projection.Mercator.project(leafletSrc.latLng([northWest.lat, maxX1]));
+      out.push([m11.x, m11.y, m12.x, m12.y]);
+    }
+
+    return out;
+  }
+};
+
 var CanvasLayer = leafletSrc.GridLayer.extend({
   initialize: function initialize(name, options) {
     var _this = this;
@@ -14121,27 +14173,38 @@ var CanvasLayer = leafletSrc.GridLayer.extend({
   }
 });
 var testLayer = new CanvasLayer();
+var dataManager = new Worker("dataManager.js");
 window.addEventListener('load', function () {
   var map = leafletSrc.map(document.body);
+
+  var moveend = function moveend() {
+    dataManager.postMessage({
+      cmd: 'moveend',
+      zoom: map.getZoom(),
+      bbox: Utils.getNormalizeBounds(map.getBounds())
+    });
+  };
+
   map.setView([55.764213, 37.617187], 13);
   leafletSrc.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
+  map.on('moveend', moveend);
+  moveend();
   testLayer.addTo(map);
-});
-var dataManager = new Worker("dataManager.js");
 
-dataManager.onmessage = function (msg) {
-  console.log('Main dataManager', msg.data);
-};
+  dataManager.onmessage = function (msg) {
+    console.log('Main dataManager', msg.data);
+  };
 
-var dateEnd = Math.floor(Date.now() / 1000);
-dataManager.postMessage({
-  cmd: 'addLayer',
-  hostName: 'maps.kosmosnimki.ru',
-  apiKey: 'ZYK54KS7JV',
-  id: '8EE2C7996800458AAF70BABB43321FA4',
-  // AISDaily
-  dateBegin: dateEnd - 24 * 60 * 60,
-  dateEnd: dateEnd
+  var dateEnd = Math.floor(Date.now() / 1000);
+  dataManager.postMessage({
+    cmd: 'addLayer',
+    hostName: 'maps.kosmosnimki.ru',
+    apiKey: 'ZYK54KS7JV',
+    id: '8EE2C7996800458AAF70BABB43321FA4',
+    // AISDaily
+    dateBegin: dateEnd - 24 * 60 * 60,
+    dateEnd: dateEnd
+  });
 });

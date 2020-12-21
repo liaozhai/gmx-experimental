@@ -1,5 +1,5 @@
 import Requests from './Requests';
-// import TilesLoader from './TilesLoader';
+import TilesLoader from './TilesLoader';
 
 const DELAY = 60000;
 const HOST:string = 'maps.kosmosnimki.ru';
@@ -12,7 +12,7 @@ const WORLDBBOX = [-W, -W, W, W];
 
 const hosts:any = {};
 
-let bbox:any = null;
+let bbox:array = null;
 let zoom = 3;
 
 let intervalID:any;
@@ -165,17 +165,17 @@ const chkVersion = () => {
 							}
 						}
 						pt.hostName = host;
-						pt.tiles = it.tiles;
+						// pt.tiles = it.tiles;
+						pt.tiles = it.tiles.slice(0, 12);
 						pt.tilesOrder = it.tilesOrder;
-						// pt.tilesPromise = 
-						// TilesLoader.load(pt);
-/*
+						pt.tilesPromise = TilesLoader.load(pt);
 						Promise.all(Object.values(pt.tilesPromise)).then((res) => {
 							//self.postMessage({res: res, host: host, dmID: it.name, cmd: 'TilesData'});
 
 				console.log('tilesPromise ___:', hosts, res);
 							// _waitCheckObservers();
 						});
+/*
 */
 						// pt.tilesPromise.then(res => {
 				// console.log('tilesPromise ___:', hosts, res);
@@ -206,6 +206,10 @@ onmessage = function(evt:MessageEvent) {
 	switch(cmd) {
 		case 'addLayer':
 			utils.addSource(data);
+			break;
+		case 'moveend':
+			zoom = data.zoom;
+			bbox = data.bbox;
 			break;
 		default:
 			console.warn('Warning: Bad command ', data);

@@ -96,6 +96,22 @@ let utils = {
 			// handler.workerContext.postMessage(out);
 		});
     },
+
+	getTileJson: function(queue) {
+		let params = queue.params || {};
+		if (queue.paramsArr) {
+			queue.paramsArr.forEach((it) => {
+				params = Object.assign(params, it);
+			});
+		}
+		// let par = Object.assign({}, fetchOptions, COMPARS, params, syncParams),
+		let par = Object.assign({}, COMPARS, params, syncParams);
+		let options = queue.options || {};
+		return fetch(queue.url + '?' + utils.getFormBody(par), fetchOptions)
+		.then(function(res) {
+			return utils.chkResponse(res, options.type);
+		});
+	},
 /*
 	extend: function (dest:any) {
 		var i, j, len, src;
@@ -188,21 +204,6 @@ let utils = {
 				// premultiplyAlpha: 'none',
 				// colorSpaceConversion: 'none'
 			// });
-		});
-	},
-
-	getTileJson: function(queue) {
-		let params = queue.params || {};
-		if (queue.paramsArr) {
-			queue.paramsArr.forEach((it) => {
-				params = utils.extend(params, it);
-			});
-		}
-		let par = utils.extend({}, fetchOptions, COMPARS, params, syncParams),
-			options = queue.options || {};
-		return fetch(queue.url + '?' + utils.getFormBody(par))
-		.then(function(res) {
-			return utils.chkResponse(res, options.type);
 		});
 	},
 
@@ -440,7 +441,7 @@ const parseTree = (json) => {
 	return out;
 };
 */
-/*
+
 const Bounds = function(arr) {
     this.min = {
         x: Number.MAX_VALUE,
@@ -533,13 +534,13 @@ Bounds.prototype = {
         return null;
     }
 };
-*/
+
     // bounds: function(arr) {
 		// return new Bounds(arr);
     // },
 
 export default {
-	// bounds: arr => new Bounds(arr),
+	bounds: arr => new Bounds(arr),
 	// geoItemBounds: utils.geoItemBounds,
 	chkSignal,
 	COMPARS,
@@ -550,7 +551,7 @@ export default {
 	// extend: utils.extend,
 	// getBitMap: utils.getBitMap,
 	getFormBody: utils.getFormBody,
-	// getTileJson: utils.getTileJson,
+	getTileJson: utils.getTileJson,
 	getJson: utils.getJson
 	// addDataSource,
 	// removeDataSource,

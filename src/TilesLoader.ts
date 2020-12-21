@@ -1,9 +1,9 @@
-// import Requests from './Requests';
+import Requests from './Requests';
 
-// const TILE_PREFIX = 'gmxAPI._vectorTileReceiver(';
+const TILE_PREFIX = 'gmxAPI._vectorTileReceiver(';
 
 const load = (pars:any) => {
-/*
+
 	pars = pars || {};
 	if (!pars.signals) { pars.signals = {}; }
 	if (!pars.tilesPromise) { pars.tilesPromise = {}; }
@@ -41,7 +41,7 @@ const load = (pars:any) => {
 					return json;
 				})
 				.catch(err => {
-					console.error(err);
+					console.warn('Bad vector tile:', tkey, err);
 				})
 			}
 		}
@@ -51,12 +51,14 @@ const load = (pars:any) => {
 				delete pars.signals[k];
 			}
 		});
-		pars.tilesPromise = tilesPromise;
+		// pars.tilesPromise = tilesPromise;
+		return tilesPromise;
 		// return out;
 		// Promise.all(arr).then((out) => {
 			// resolve(out);
 		// });
 	// });
+/*
 */
 };
 

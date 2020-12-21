@@ -1,6 +1,7 @@
 import L, { Coords, GridLayerOptions } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './index.css';
+import Utils from './utils';
 
 const CanvasLayer = L.GridLayer.extend({
 	initialize: function(name:string, options:GridLayerOptions) {
@@ -36,32 +37,41 @@ const CanvasLayer = L.GridLayer.extend({
 });
 
 const testLayer = new CanvasLayer();
+const dataManager = new Worker("dataManager.js");
 
 window.addEventListener('load', () => {
     const map = L.map(document.body);
+    const moveend = () => {
+		dataManager.postMessage({
+			cmd: 'moveend',
+			zoom: map.getZoom(),
+			bbox: Utils.getNormalizeBounds(map.getBounds())
+		});
+	};
     map.setView([55.764213, 37.617187], 13);
 	L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 		attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 	}).addTo(map);
+	map
+	.on('moveend', moveend);
 
+	moveend();
 	testLayer.addTo(map);
   
-});
 
-const dataManager = new Worker("dataManager.js");
+	dataManager.onmessage = (msg:MessageEvent) => {	
+		console.log('Main dataManager', msg.data);
+	};
 
-dataManager.onmessage = (msg:MessageEvent) => {	
-	console.log('Main dataManager', msg.data);
-};
+	const dateEnd = Math.floor(Date.now() / 1000);
 
-const dateEnd = Math.floor(Date.now() / 1000);
+	dataManager.postMessage({
+		cmd: 'addLayer',
+		hostName: 'maps.kosmosnimki.ru',
+		apiKey: 'ZYK54KS7JV',
 
-dataManager.postMessage({
-	cmd: 'addLayer',
-	hostName: 'maps.kosmosnimki.ru',
-	apiKey: 'ZYK54KS7JV',
-
-	id: '8EE2C7996800458AAF70BABB43321FA4', // AISDaily
-	dateBegin: dateEnd - 24 * 60 * 60,
-	dateEnd: dateEnd
+		id: '8EE2C7996800458AAF70BABB43321FA4', // AISDaily
+		dateBegin: dateEnd - 24 * 60 * 60,
+		dateEnd: dateEnd
+	});
 });
