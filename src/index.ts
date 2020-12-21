@@ -3,9 +3,14 @@ import 'leaflet/dist/leaflet.css';
 import './index.css';
 import Utils from './utils';
 
+const dataManager = new Worker("dataManager.js");
+
 const CanvasLayer = L.GridLayer.extend({
-	initialize: function(name:string, options:GridLayerOptions) {
-		options = L.Util.setOptions(this, options);	
+	options: {
+		layerId: ''
+	},
+	initialize: function(options:GridLayerOptions) {
+		L.setOptions(this, options);
 		this._worker = new Worker("renderer.js");
 		this._worker.onmessage = (msg:MessageEvent) => {	
 			const {tileKey} = msg.data;		
@@ -33,11 +38,16 @@ const CanvasLayer = L.GridLayer.extend({
 			coords,
 			canvas,
 		}, [canvas]);
+	},
+	onAdd: function (map) {
+		dataManager.postMessage({
+			cmd: 'addLayer',
+			layerId: this.options.layerId,
+		}, []);
 	}
 });
 
-const testLayer = new CanvasLayer();
-const dataManager = new Worker("dataManager.js");
+const testLayer = new CanvasLayer({layerId: 'ais'});
 
 window.addEventListener('load', () => {
     const map = L.map(document.body);
@@ -66,7 +76,7 @@ window.addEventListener('load', () => {
 	const dateEnd = Math.floor(Date.now() / 1000);
 
 	dataManager.postMessage({
-		cmd: 'addLayer',
+		cmd: 'addSource',
 		hostName: 'maps.kosmosnimki.ru',
 		apiKey: 'ZYK54KS7JV',
 

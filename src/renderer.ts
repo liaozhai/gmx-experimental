@@ -1,4 +1,4 @@
-onmessage = function(evt:MessageEvent) {
+self.onmessage = function(evt:MessageEvent) {
     const {data: {coords, canvas}} = evt;        
     // const gl = canvas.getContext("webgl");
     const {x, y, z} = coords;
@@ -26,7 +26,7 @@ onmessage = function(evt:MessageEvent) {
         ctx.stroke();
 
         // console.log('render', tileKey);
-        
+            
         self.postMessage({
             tileKey,
             cmd: 'render',

@@ -1,5 +1,5 @@
 import Requests from './Requests';
-import TilesLoader from './TilesLoader';
+import load_tiles from './TilesLoader';
 
 const DELAY = 60000;
 const HOST:string = 'maps.kosmosnimki.ru';
@@ -12,7 +12,7 @@ const WORLDBBOX = [-W, -W, W, W];
 
 const hosts:any = {};
 
-let bbox:array = null;
+let bbox:any = null;
 let zoom = 3;
 
 let intervalID:any;
@@ -168,7 +168,7 @@ const chkVersion = () => {
 						pt.tiles = it.tiles;
 						// pt.tiles = it.tiles.slice(0, 12);
 						pt.tilesOrder = it.tilesOrder;
-						pt.tilesPromise = TilesLoader.load(pt);
+						pt.tilesPromise = load_tiles(pt);
 						Promise.all(Object.values(pt.tilesPromise)).then((res) => {
 							//self.postMessage({res: res, host: host, dmID: it.name, cmd: 'TilesData'});
 
@@ -202,10 +202,20 @@ const chkVersion = () => {
 onmessage = function(evt:MessageEvent) {    
     // console.log('dataManager', evt.data, Requests);
 	const data = evt.data || {};
-	const {cmd} = data;
+	const {cmd, layerId} = data;
+	let worker: Worker;
 	switch(cmd) {
-		case 'addLayer':
+		case 'addSource':
 			utils.addSource(data);
+			break;
+		case 'addLayer':
+			utils.addSource(data);			
+			// worker = new Worker("renderer.js");
+			// worker.onmessage = (msg:MessageEvent) => {	
+			// 	const {tileKey} = msg.data;		
+			// 	const {coords, el} = this.getTile(tileKey);	
+			// 	this._tileReady(coords, undefined, el);
+			// };
 			break;
 		case 'moveend':
 			zoom = data.zoom;

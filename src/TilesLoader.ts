@@ -2,8 +2,7 @@ import Requests from './Requests';
 
 const TILE_PREFIX = 'gmxAPI._vectorTileReceiver(';
 
-const load = (pars:any) => {
-
+export default function (pars:any) {
 	pars = pars || {};
 	if (!pars.signals) { pars.signals = {}; }
 	if (!pars.tilesPromise) { pars.tilesPromise = {}; }
@@ -60,8 +59,4 @@ const load = (pars:any) => {
 	// });
 /*
 */
-};
-
-export default {
-	load
 };

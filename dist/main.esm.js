@@ -14128,11 +14128,15 @@ var Utils = {
   }
 };
 
+var dataManager = new Worker("dataManager.js");
 var CanvasLayer = leafletSrc.GridLayer.extend({
-  initialize: function initialize(name, options) {
+  options: {
+    layerId: ''
+  },
+  initialize: function initialize(options) {
     var _this = this;
 
-    options = leafletSrc.Util.setOptions(this, options);
+    leafletSrc.setOptions(this, options);
     this._worker = new Worker("renderer.js");
 
     this._worker.onmessage = function (msg) {
@@ -14168,10 +14172,17 @@ var CanvasLayer = leafletSrc.GridLayer.extend({
       coords: coords,
       canvas: canvas
     }, [canvas]);
+  },
+  onAdd: function onAdd(map) {
+    dataManager.postMessage({
+      cmd: 'addLayer',
+      layerId: this.options.layerId
+    }, []);
   }
 });
-var testLayer = new CanvasLayer();
-var dataManager = new Worker("dataManager.js");
+var testLayer = new CanvasLayer({
+  layerId: 'ais'
+});
 window.addEventListener('load', function () {
   var map = leafletSrc.map(document.body);
 
@@ -14197,7 +14208,7 @@ window.addEventListener('load', function () {
 
   var dateEnd = Math.floor(Date.now() / 1000);
   dataManager.postMessage({
-    cmd: 'addLayer',
+    cmd: 'addSource',
     hostName: 'maps.kosmosnimki.ru',
     apiKey: 'ZYK54KS7JV',
     id: '8EE2C7996800458AAF70BABB43321FA4',
