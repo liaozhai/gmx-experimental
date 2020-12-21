@@ -25,10 +25,6 @@ const CanvasLayer = L.GridLayer.extend({
 	getTile: function (key:string) {
 		return this._tiles[key];
 	},
-	setTileReady: function (key:string) {
-		const tile = this.getTile(key);
-		this._tileReady(tile.coords, undefined, tile.el);
-	},
 	drawTile: function(coords:Coords, tile:HTMLCanvasElement) {
 		const canvas = tile.transferControlToOffscreen();	
 		this._worker.postMessage({
@@ -57,8 +53,15 @@ const dataManager = new Worker("dataManager.js");
 dataManager.onmessage = (msg:MessageEvent) => {	
 	console.log('Main dataManager', msg.data);
 };
+
+const dateEnd = Math.floor(Date.now() / 1000);
+
 dataManager.postMessage({
 	cmd: 'addLayer',
-	hostName: 'maps.kosmosnimki.ru/',
+	hostName: 'maps.kosmosnimki.ru',
+	apiKey: 'ZYK54KS7JV',
+
 	id: '8EE2C7996800458AAF70BABB43321FA4', // AISDaily
+	dateBegin: dateEnd - 24 * 60 * 60,
+	dateEnd: dateEnd
 });
