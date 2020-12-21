@@ -14108,11 +14108,6 @@ var CanvasLayer = leafletSrc.GridLayer.extend({
   getTile: function getTile(key) {
     return this._tiles[key];
   },
-  setTileReady: function setTileReady(key) {
-    var tile = this.getTile(key);
-
-    this._tileReady(tile.coords, undefined, tile.el);
-  },
   drawTile: function drawTile(coords, tile) {
     var canvas = tile.transferControlToOffscreen();
 
@@ -14138,9 +14133,13 @@ dataManager.onmessage = function (msg) {
   console.log('Main dataManager', msg.data);
 };
 
+var dateEnd = Math.floor(Date.now() / 1000);
 dataManager.postMessage({
   cmd: 'addLayer',
-  hostName: 'maps.kosmosnimki.ru/',
-  id: '8EE2C7996800458AAF70BABB43321FA4' // AISDaily
-
+  hostName: 'maps.kosmosnimki.ru',
+  apiKey: 'ZYK54KS7JV',
+  id: '8EE2C7996800458AAF70BABB43321FA4',
+  // AISDaily
+  dateBegin: dateEnd - 24 * 60 * 60,
+  dateEnd: dateEnd
 });

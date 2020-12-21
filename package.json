@@ -14,7 +14,7 @@
     "watch": "rollup -c -w",
     "dev": "npm-run-all --parallel start watch",
     "build": "npm run build:types && npm run build:js",
-    "start": "http-server"
+    "start": "http-server -S -C cert.pem -o"
   },
   "author": "",
   "license": "ISC",

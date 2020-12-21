@@ -1,4 +1,3 @@
-
 const	_self = self || window;
 		// serverBase = _self.serverBase || 'maps.kosmosnimki.ru/',
 		// serverProxy = serverBase + 'Plugins/ForestReport/proxy',
@@ -13,7 +12,7 @@ let str = _self.location.origin || '',
 	fetchOptions = {
 		// method: 'post',
 		// headers: {'Content-type': 'application/x-www-form-urlencoded'},
-		mode: 'cors',
+		// mode: 'cors',
 		// redirect: 'follow',
 		credentials: 'include'
 	};
