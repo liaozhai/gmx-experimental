@@ -2,7 +2,7 @@ self.onmessage = function(evt:MessageEvent) {
     const {data: {coords, canvas}} = evt;        
     // const gl = canvas.getContext("webgl");
     const {x, y, z} = coords;
-    const tileKey = [x,y,z].join(':');        
+    const tileKey = [x,y,z].join(':');
     const ctx = canvas.getContext("2d");
     function render() {
         // ... some drawing using the gl context ...

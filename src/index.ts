@@ -11,12 +11,12 @@ const CanvasLayer = L.GridLayer.extend({
 	},
 	initialize: function(options:GridLayerOptions) {
 		L.setOptions(this, options);
-		this._worker = new Worker("renderer.js");
-		this._worker.onmessage = (msg:MessageEvent) => {	
-			const {tileKey} = msg.data;		
-			const {coords, el} = this.getTile(tileKey);	
-			this._tileReady(coords, undefined, el);
-		};
+		// this._worker = new Worker("renderer.js");
+		// this._worker.onmessage = (msg:MessageEvent) => {	
+			// const {tileKey} = msg.data;		
+			// const {coords, el} = this.getTile(tileKey);	
+			// this._tileReady(coords, undefined, el);
+		// };
 	},
     createTile: function(coords:Coords) {		
 		let tile = L.DomUtil.create('canvas', 'leaflet-tile') as HTMLCanvasElement;				
@@ -33,21 +33,30 @@ const CanvasLayer = L.GridLayer.extend({
 	},
 	drawTile: function(coords:Coords, tile:HTMLCanvasElement) {
 		const canvas = tile.transferControlToOffscreen();	
-		this._worker.postMessage({
-			cmd: 'drawTestTile',
+		dataManager.postMessage({
+			cmd: 'drawTile',
+			id: this.options.layerId,
 			coords,
 			canvas,
 		}, [canvas]);
 	},
 	onAdd: function (map) {
+        L.GridLayer.prototype.onAdd.call(this, map);
 		dataManager.postMessage({
 			cmd: 'addLayer',
-			layerId: this.options.layerId,
+			id: this.options.layerId,
+			dateBegin: this.options.dateBegin,
+			dateEnd: this.options.dateEnd,
 		}, []);
 	}
 });
 
-const testLayer = new CanvasLayer({layerId: 'ais'});
+const dateEnd = Math.floor(Date.now() / 1000);
+const testLayer = new CanvasLayer({
+	dateBegin: dateEnd - 24 * 60 * 60,
+	dateEnd: dateEnd,
+	layerId: '8EE2C7996800458AAF70BABB43321FA4'
+});
 
 window.addEventListener('load', () => {
     const map = L.map(document.body);
@@ -73,15 +82,14 @@ window.addEventListener('load', () => {
 		console.log('Main dataManager', msg.data);
 	};
 
-	const dateEnd = Math.floor(Date.now() / 1000);
 
-	dataManager.postMessage({
-		cmd: 'addSource',
-		hostName: 'maps.kosmosnimki.ru',
-		apiKey: 'ZYK54KS7JV',
+	// dataManager.postMessage({
+		// cmd: 'addSource',
+		// hostName: 'maps.kosmosnimki.ru',
+		// apiKey: 'ZYK54KS7JV',
 
-		id: '8EE2C7996800458AAF70BABB43321FA4', // AISDaily
-		dateBegin: dateEnd - 24 * 60 * 60,
-		dateEnd: dateEnd
-	});
+		// id: '8EE2C7996800458AAF70BABB43321FA4', // AISDaily
+		// dateBegin: dateEnd - 24 * 60 * 60,
+		// dateEnd: dateEnd
+	// });
 });

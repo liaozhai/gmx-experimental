@@ -14136,20 +14136,12 @@ var CanvasLayer = leafletSrc.GridLayer.extend({
     layerId: ''
   },
   initialize: function initialize(options) {
-    var _this = this;
-
-    leafletSrc.setOptions(this, options);
-    this._worker = new Worker("renderer.js");
-
-    this._worker.onmessage = function (msg) {
-      var tileKey = msg.data.tileKey;
-
-      var _this$getTile = _this.getTile(tileKey),
-          coords = _this$getTile.coords,
-          el = _this$getTile.el;
-
-      _this._tileReady(coords, undefined, el);
-    };
+    leafletSrc.setOptions(this, options); // this._worker = new Worker("renderer.js");
+    // this._worker.onmessage = (msg:MessageEvent) => {	
+    // const {tileKey} = msg.data;		
+    // const {coords, el} = this.getTile(tileKey);	
+    // this._tileReady(coords, undefined, el);
+    // };
   },
   createTile: function createTile(coords) {
     var tile = leafletSrc.DomUtil.create('canvas', 'leaflet-tile');
@@ -14168,22 +14160,28 @@ var CanvasLayer = leafletSrc.GridLayer.extend({
   },
   drawTile: function drawTile(coords, tile) {
     var canvas = tile.transferControlToOffscreen();
-
-    this._worker.postMessage({
-      cmd: 'drawTestTile',
+    dataManager.postMessage({
+      cmd: 'drawTile',
+      id: this.options.layerId,
       coords: coords,
       canvas: canvas
     }, [canvas]);
   },
   onAdd: function onAdd(map) {
+    leafletSrc.GridLayer.prototype.onAdd.call(this, map);
     dataManager.postMessage({
       cmd: 'addLayer',
-      layerId: this.options.layerId
+      id: this.options.layerId,
+      dateBegin: this.options.dateBegin,
+      dateEnd: this.options.dateEnd
     }, []);
   }
 });
+var dateEnd = Math.floor(Date.now() / 1000);
 var testLayer = new CanvasLayer({
-  layerId: 'ais'
+  dateBegin: dateEnd - 24 * 60 * 60,
+  dateEnd: dateEnd,
+  layerId: '8EE2C7996800458AAF70BABB43321FA4'
 });
 window.addEventListener('load', function () {
   var map = leafletSrc.map(document.body);
@@ -14206,16 +14204,13 @@ window.addEventListener('load', function () {
 
   dataManager.onmessage = function (msg) {
     console.log('Main dataManager', msg.data);
-  };
+  }; // dataManager.postMessage({
+  // cmd: 'addSource',
+  // hostName: 'maps.kosmosnimki.ru',
+  // apiKey: 'ZYK54KS7JV',
+  // id: '8EE2C7996800458AAF70BABB43321FA4', // AISDaily
+  // dateBegin: dateEnd - 24 * 60 * 60,
+  // dateEnd: dateEnd
+  // });
 
-  var dateEnd = Math.floor(Date.now() / 1000);
-  dataManager.postMessage({
-    cmd: 'addSource',
-    hostName: 'maps.kosmosnimki.ru',
-    apiKey: 'ZYK54KS7JV',
-    id: '8EE2C7996800458AAF70BABB43321FA4',
-    // AISDaily
-    dateBegin: dateEnd - 24 * 60 * 60,
-    dateEnd: dateEnd
-  });
 });

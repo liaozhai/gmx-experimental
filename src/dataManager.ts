@@ -36,7 +36,7 @@ const utils = {
         intervalID = setInterval(chkVersion, msec || DELAY);
     },
 	addSource: (attr:any) => {
-		let id = attr.id;
+		let id = attr.id || attr.layerId;
 		if (id) {
 			let hostName = attr.hostName || HOST;
 			if (!hosts[hostName]) {
@@ -200,7 +200,7 @@ const chkVersion = () => {
 };
 
 onmessage = function(evt:MessageEvent) {    
-    // console.log('dataManager', evt.data, Requests);
+    console.log('dataManager', evt.data);
 	const data = evt.data || {};
 	const {cmd, layerId} = data;
 	let worker: Worker;
@@ -209,13 +209,22 @@ onmessage = function(evt:MessageEvent) {
 			utils.addSource(data);
 			break;
 		case 'addLayer':
+			data.worker = new Worker("renderer.js");
 			utils.addSource(data);			
-			// worker = new Worker("renderer.js");
-			// worker.onmessage = (msg:MessageEvent) => {	
-			// 	const {tileKey} = msg.data;		
-			// 	const {coords, el} = this.getTile(tileKey);	
-			// 	this._tileReady(coords, undefined, el);
-			// };
+			break;
+		case 'drawTile':
+			let id = data.id;
+			const {x, y, z} = data.coords;
+			const tileKey = [x,y,z].join(':');
+
+			if (id) {
+				let hostName = data.hostName || HOST;
+				if (hosts[hostName]) {
+					let it = hosts[hostName].ids[id];
+					if (!it.screen) { it.screen = {}; }
+					it.screen[tileKey] = {coords: data.coords, canvas: data.canvas};
+				}
+			}
 			break;
 		case 'moveend':
 			zoom = data.zoom;
