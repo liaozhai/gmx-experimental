@@ -6,7 +6,9 @@ export default {
         const southEast:LatLng = screenBounds.getSouthEast();
         let minX = northWest.lng, maxX = southEast.lng;
         const w = (maxX - minX) / 2;
-        let minX1:number, maxX1:number, out = [];
+        let minX1:number = 0;
+		let maxX1:number = 0;
+		const out = [];
 
         if (w >= 180) {
             minX = -180; maxX = 180;

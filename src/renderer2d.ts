@@ -1,5 +1,5 @@
 export default {
-	render2d: (options:any, coords) => {
+	render2d: (options:any, coords:Array<number>) => {
 		const {scale, canvas} = options;        
 		const ctx = canvas.getContext("2d");
 

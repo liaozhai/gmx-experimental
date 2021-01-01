@@ -179,7 +179,7 @@ const chkVersion = () => {
 	});
 };
 
-const repaintScreenTiles = (vt, pt, clearFlag) => {
+const repaintScreenTiles = (vt:any, pt:any, clearFlag:boolean) => {
 	let done = false;
 	if(pt.screen) {
 		Object.keys(pt.screen).forEach(tileKey => {
@@ -209,7 +209,7 @@ const repaintScreenTiles = (vt, pt, clearFlag) => {
 	return done;
 };
 
-const recheckVectorTiles = (pt, clearFlag) => {
+const recheckVectorTiles = (pt:any, clearFlag:boolean) => {
 	let done = false;
 	if(pt.tilesPromise) {
 		Promise.all(Object.values(pt.tilesPromise)).then((res) => {
@@ -229,7 +229,7 @@ const recheckVectorTiles = (pt, clearFlag) => {
 	// });
 };
 
-const redrawScreen = (clearFlag) => {
+const redrawScreen = (clearFlag:boolean) => {
 	for (let host in hosts) {
 		let hostLayers = hosts[host];
 		let	ids = hostLayers.ids;
@@ -245,8 +245,8 @@ addEventListener('tilesLoaded', redrawScreen);
 onmessage = function(evt:MessageEvent) {    
     // console.log('dataManager', evt.data);
 	const data = evt.data || {};
-	const {cmd, layerId} = data;
-	let worker: Worker;
+	const {cmd} = data;
+	// let worker: Worker;
 	switch(cmd) {
 		case 'addSource':
 			utils.addSource(data);
@@ -265,7 +265,7 @@ onmessage = function(evt:MessageEvent) {
 				if (hosts[hostName]) {
 					let it = hosts[hostName].ids[id];
 					if (!it.screen) { it.screen = {}; }
-					let bounds = Requests.getTileBounds(data.coords);
+					let bounds = Requests.getTileBounds(data.coords, 0);
 					it.screen[tileKey] = {
 						bounds: bounds,
 						coords: data.coords,

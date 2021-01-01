@@ -10,7 +10,7 @@ export default function (pars:any) {
 	// return new Promise((resolve) => {
 		let tilesOrder = pars.tilesOrder,
 			pb = pars.tiles,
-			tilesPromise = {};
+			tilesPromise:any = {};
 		for (let i = 0, len = pb.length; i < len; i += tilesOrder.length) {
 			let arr = pb.slice(i, i + tilesOrder.length),
 				tkey = arr.join('_'),
@@ -19,10 +19,9 @@ export default function (pars:any) {
 			if (pars.tilesPromise[tkey]) {
 				tilesPromise[tkey] = pars.tilesPromise[tkey];
 			} else {
-				// pars.tilesPromise[tkey] = Requests.getTileJson({
 				tilesPromise[tkey] = Requests.getTileJson({
 					url: '//' + pars.hostName + '/TileSender.ashx',
-					options: Requests.chkSignal(tkey, pars.signals),
+					options: Requests.chkSignal(tkey, pars.signals, {}),
 					paramsArr: [tHash, {
 						r: 'j',
 						ModeKey: 'tile',
@@ -37,7 +36,7 @@ export default function (pars:any) {
 						}
 					}
 					json.bounds = Requests.bounds([[json.bbox[0], json.bbox[1]], [json.bbox[2], json.bbox[3]]]);
-					json.bounds1 = Requests.getTileBounds(json);
+					json.bounds1 = Requests.getTileBounds(json, 0);
 					return json;
 				})
 				.catch(err => {

@@ -99,7 +99,7 @@ let utils = {
 		});
     },
 
-	getTileJson: function(queue) {
+	getTileJson: function(queue:any) {
 		let params = queue.params || {};
 		if (queue.paramsArr) {
 			queue.paramsArr.forEach((it) => {
@@ -444,7 +444,7 @@ const parseTree = (json) => {
 };
 */
 
-const Bounds = function(arr) {
+const Bounds = function(arr:Array<number>) {
     this.min = {
         x: Number.MAX_VALUE,
         y: Number.MAX_VALUE
@@ -456,7 +456,7 @@ const Bounds = function(arr) {
     this.extendArray(arr);
 };
 Bounds.prototype = {
-    extend: function(x, y) {
+    extend: function(x:number, y:number) {
         if (x < this.min.x) { this.min.x = x; }
         if (x > this.max.x) { this.max.x = x; }
         if (y < this.min.y) { this.min.y = y; }
@@ -466,7 +466,7 @@ Bounds.prototype = {
     extendBounds: function(bounds) {
         return this.extendArray([[bounds.min.x, bounds.min.y], [bounds.max.x, bounds.max.y]]);
     },
-    extendArray: function(arr) {
+    extendArray: function(arr:Array<number>) {
         if (!arr || !arr.length) { return this; }
         var i, len;
         if (typeof arr[0] === 'number') {
@@ -480,19 +480,19 @@ Bounds.prototype = {
         }
         return this;
     },
-    addBuffer: function(dxmin, dymin, dxmax, dymax) {
+    addBuffer: function(dxmin:number, dymin:number, dxmax:number, dymax:number) {
         this.min.x -= dxmin;
         this.min.y -= dymin || dxmin;
         this.max.x += dxmax || dxmin;
         this.max.y += dymax || dymin || dxmin;
         return this;
     },
-    contains: function (point) { // ([x, y]) -> Boolean
+    contains: function (point:Array<number>) { // ([x, y]) -> Boolean
         var min = this.min, max = this.max,
             x = point[0], y = point[1];
         return x >= min.x && x <= max.x && y >= min.y && y <= max.y;
     },
-    containsWithDelta: function (point, dx, dy) { // ([x, y]) -> Boolean
+    containsWithDelta: function (point:Array<number>, dx:number, dy:number) { // ([x, y]) -> Boolean
         var min = this.min, max = this.max,
             x = point[0], y = point[1];
 		dx = dx || 0;
@@ -503,12 +503,12 @@ Bounds.prototype = {
         var min = this.min, max = this.max;
         return [(min.x + max.x) / 2, (min.y + max.y) / 2];
     },
-    addOffset: function (offset) {
+    addOffset: function (offset:Array<number>) {
         this.min.x += offset[0]; this.max.x += offset[0];
         this.min.y += offset[1]; this.max.y += offset[1];
         return this;
     },
-    intersects: function (bounds) { // (Bounds) -> Boolean
+    intersects: function (bounds:any) { // (Bounds) -> Boolean
         var min = this.min,
             max = this.max,
             min2 = bounds.min,
@@ -531,7 +531,7 @@ Bounds.prototype = {
             max2 = bounds.max;
         return max2.x === max.x && min2.x === min.x && max2.y === max.y && min2.y === min.y;
     },
-    isNodeIntersect: function (coords) {
+    isNodeIntersect: function (coords:Array<number>) {
         for (var i = 0, len = coords.length; i < len; i++) {
             if (this.contains(coords[i])) {
                 return {
@@ -550,7 +550,7 @@ Bounds.prototype = {
 
 export default {
 	bounds: arr => new Bounds(arr),
-    getTileBounds: function(coords, delta) {
+    getTileBounds: function(coords:any, delta:number) {
 		var tileSize = CONST.WORLDWIDTHFULL / Math.pow(2, coords.z),
             minx = coords.x * tileSize - CONST.W,
             miny = CONST.W - tileSize - coords.y * tileSize;

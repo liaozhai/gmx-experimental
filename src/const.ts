@@ -3,8 +3,8 @@ const W = Math.floor(WORLDWIDTHFULL / 2);
 export default {
 	DELAY: 60000,
 	HOST: 'maps.kosmosnimki.ru',
-	SCRIPTS<any>: {
-		CheckVersion<string>: '/Layer/CheckVersion.ashx'
+	SCRIPTS: {
+		CheckVersion: '/Layer/CheckVersion.ashx'
 	},
 	WORLDWIDTHFULL: WORLDWIDTHFULL,
 	W: W,
