@@ -14128,6 +14128,19 @@ var Utils = {
   }
 };
 
+var WORLDWIDTHFULL = 40075016.685578496;
+var W = Math.floor(WORLDWIDTHFULL / 2);
+var CONST = {
+  DELAY: 60000,
+  HOST: 'maps.kosmosnimki.ru',
+  SCRIPTS: {
+    CheckVersion: '/Layer/CheckVersion.ashx'
+  },
+  WORLDWIDTHFULL: WORLDWIDTHFULL,
+  W: W,
+  WORLDBBOX: [-W, -W, W, W]
+};
+
 var dataManager = new Worker("dataManager.js");
 var CanvasLayer = leafletSrc.GridLayer.extend({
   options: {
@@ -14150,11 +14163,19 @@ var CanvasLayer = leafletSrc.GridLayer.extend({
 
     tile.width = x;
     tile.height = y;
+    tile.classList.add([coords.x, coords.y, coords.z].join(':'));
     this.drawTile(coords, tile);
     return tile;
   },
   getTile: function getTile(key) {
     return this._tiles[key];
+  },
+  tileReady: function tileReady(key) {
+    var tile = this.getTile(key);
+
+    if (tile) {
+      this._tileReady(tile.coords, undefined, tile.el);
+    }
   },
   drawTile: function drawTile(coords, tile) {
     var canvas = tile.transferControlToOffscreen();
@@ -14179,15 +14200,24 @@ var dateEnd = Math.floor(Date.now() / 1000);
 var testLayer = new CanvasLayer({
   dateBegin: dateEnd - 24 * 60 * 60,
   dateEnd: dateEnd,
-  layerId: '8EE2C7996800458AAF70BABB43321FA4'
+  layerId: '8EE2C7996800458AAF70BABB43321FA4' // layerId: 'F5CAD73AF25D46D2B3977847AEE33293'
+
 });
+var layersByID = {
+  '8EE2C7996800458AAF70BABB43321FA4': testLayer // 'F5CAD73AF25D46D2B3977847AEE33293': testLayer
+
+};
 window.addEventListener('load', function () {
   var map = leafletSrc.map(document.body);
 
   var moveend = function moveend() {
+    var zoom = map.getZoom(); // const scale = map.scale(zoom);
+
     dataManager.postMessage({
       cmd: 'moveend',
-      zoom: map.getZoom(),
+      zoom: zoom,
+      // scale: L.CRS.EPSG3857.scale(zoom),
+      scale: 256 / (CONST.WORLDWIDTHFULL / Math.pow(2, zoom)),
       bbox: Utils.getNormalizeBounds(map.getBounds())
     });
   };
@@ -14197,12 +14227,30 @@ window.addEventListener('load', function () {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
   map.on('moveend', moveend);
-  moveend();
   testLayer.addTo(map);
 
   dataManager.onmessage = function (msg) {
-    console.log('Main dataManager', msg.data);
-  }; // dataManager.postMessage({
+    // console.log('Main dataManager', msg.data);
+    var data = msg.data || {};
+    var cmd = data.cmd,
+        layerId = data.layerId,
+        tileKey = data.tileKey;
+
+    switch (cmd) {
+      case 'render':
+        layersByID[layerId].tileReady(tileKey);
+        break;
+
+      case 'chkVersion':
+        break;
+
+      default:
+        console.warn('Warning: Bad message from worker ', data);
+        break;
+    }
+  };
+
+  moveend(); // dataManager.postMessage({
   // cmd: 'addSource',
   // hostName: 'maps.kosmosnimki.ru',
   // apiKey: 'ZYK54KS7JV',
@@ -14210,5 +14258,4 @@ window.addEventListener('load', function () {
   // dateBegin: dateEnd - 24 * 60 * 60,
   // dateEnd: dateEnd
   // });
-
 });

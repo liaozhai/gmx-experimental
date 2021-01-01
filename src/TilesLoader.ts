@@ -36,7 +36,8 @@ export default function (pars:any) {
 							json = JSON.parse(json.substr(0, json.length -1));
 						}
 					}
-					json.bounds = Requests.bounds(json.bbox);
+					json.bounds = Requests.bounds([[json.bbox[0], json.bbox[1]], [json.bbox[2], json.bbox[3]]]);
+					json.bounds1 = Requests.getTileBounds(json);
 					return json;
 				})
 				.catch(err => {

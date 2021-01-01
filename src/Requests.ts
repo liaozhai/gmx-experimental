@@ -1,3 +1,5 @@
+import CONST from './const';
+
 const	_self = self || window;
 		// serverBase = _self.serverBase || 'maps.kosmosnimki.ru/',
 		// serverProxy = serverBase + 'Plugins/ForestReport/proxy',
@@ -29,7 +31,7 @@ const chkSignal = (signalName:string, signals:any, opt:any) => {
 // console.log('sssssss', sObj, signalName)
 	if (sObj) { sObj.abort(); }
 	sObj = signals[signalName] = new AbortController();
-	sObj.signal.addEventListener('abort', (ev:any) => console.log('Отмена fetch:', ev));
+	// sObj.signal.addEventListener('abort', (ev:any) => console.log('Отмена fetch:', ev));
 	opt.signal = sObj.signal;
 	signals[signalName] = sObj;
 	return opt;
@@ -490,6 +492,13 @@ Bounds.prototype = {
             x = point[0], y = point[1];
         return x >= min.x && x <= max.x && y >= min.y && y <= max.y;
     },
+    containsWithDelta: function (point, dx, dy) { // ([x, y]) -> Boolean
+        var min = this.min, max = this.max,
+            x = point[0], y = point[1];
+		dx = dx || 0;
+		dy = dy || dx;
+        return x >= min.x - dx && x <= max.x + dx && y >= min.y - dy && y <= max.y + dy;
+    },
     getCenter: function () {
         var min = this.min, max = this.max;
         return [(min.x + max.x) / 2, (min.y + max.y) / 2];
@@ -510,7 +519,7 @@ Bounds.prototype = {
         var min = this.min,
             max = this.max,
             x = dx || 0,
-            y = dy || 0,
+            y = dy || x,
             min2 = bounds.min,
             max2 = bounds.max;
         return max2.x + x > min.x && min2.x - x < max.x && max2.y + y > min.y && min2.y - y < max.y;
@@ -541,6 +550,17 @@ Bounds.prototype = {
 
 export default {
 	bounds: arr => new Bounds(arr),
+    getTileBounds: function(coords, delta) {
+		var tileSize = CONST.WORLDWIDTHFULL / Math.pow(2, coords.z),
+            minx = coords.x * tileSize - CONST.W,
+            miny = CONST.W - tileSize - coords.y * tileSize;
+		delta = delta || 0; 
+        return new Bounds([
+			[minx - delta, miny - delta],
+			[minx + tileSize + delta, miny + tileSize + delta]
+		]);
+    },
+
 	// geoItemBounds: utils.geoItemBounds,
 	chkSignal,
 	COMPARS,

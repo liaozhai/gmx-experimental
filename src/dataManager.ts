@@ -1,19 +1,12 @@
+import CONST from './const';
 import Requests from './Requests';
 import load_tiles from './TilesLoader';
-
-const DELAY = 60000;
-const HOST:string = 'maps.kosmosnimki.ru';
-const SCRIPTS = {
-	CheckVersion: '/Layer/CheckVersion.ashx'
-};
-const WORLDWIDTHFULL = 40075016.685578496;
-const W = Math.floor(WORLDWIDTHFULL / 2);
-const WORLDBBOX = [-W, -W, W, W];
+import Renderer from './renderer2d';
 
 const hosts:any = {};
-
 let bbox:any = null;
 let zoom = 3;
+let scale = 1;
 
 let intervalID:any;
 let timeoutID:any;
@@ -25,20 +18,20 @@ const utils = {
     },
 
     stop: function() {
-		console.log('stop:', intervalID, DELAY);
+		// console.log('stop:', intervalID, CONST.DELAY);
         if (intervalID) { clearInterval(intervalID); }
         intervalID = null;
     },
 
     start: function(msec:number ) {
-		console.log('start:', intervalID, msec);
+		// console.log('start:', intervalID, msec);
         utils.stop();
-        intervalID = setInterval(chkVersion, msec || DELAY);
+        intervalID = setInterval(chkVersion, msec || CONST.DELAY);
     },
 	addSource: (attr:any) => {
 		let id = attr.id || attr.layerId;
 		if (id) {
-			let hostName = attr.hostName || HOST;
+			let hostName = attr.hostName || CONST.HOST;
 			if (!hosts[hostName]) {
 				hosts[hostName] = {ids: {}, signals: {}};
 				if (attr.apiKey) {
@@ -70,7 +63,7 @@ const utils = {
 
 		let id = attr.id;
 		if (id) {
-			let hostName = attr.hostName || HOST;
+			let hostName = attr.hostName || CONST.HOST;
 			if (hosts[hostName]) {
 				let pt = hosts[hostName].ids[id];
 	console.log('signals:', pt.signals, pt);
@@ -123,11 +116,11 @@ const utils = {
 		}
 
 		return Requests.getJson({
-			url: '//' + hostName + SCRIPTS.CheckVersion,
+			url: '//' + hostName + CONST.SCRIPTS.CheckVersion,
 			options: Requests.chkSignal('chkVersion', hostLayers.signals, undefined),
 			paramsArr: [Requests.COMPARS, {
 				layers: JSON.stringify(arr),
-				bboxes: JSON.stringify(bbox || [WORLDBBOX]),
+				bboxes: JSON.stringify(bbox || [CONST.WORLDBBOX]),
 				// generalizedTiles: false,
 				zoom: zoom
 			}]
@@ -139,15 +132,15 @@ const utils = {
 			console.error(err);
 			// resolve('');
 		});
-	}
+	},
 };
 
 const chkVersion = () => {
-    console.log('dataManager chkVersion', hosts);
+    // console.log('dataManager chkVersion', hosts);
 	for (let host in hosts) {
 		utils.chkHost(host).then((json:any) => {
 			if (json.error) {
-				console.warn('chkVersion:', json);
+				// console.warn('chkVersion:', json);
 			} else {
 				let hostLayers = hosts[host];
 				let	ids = hostLayers.ids;
@@ -169,23 +162,10 @@ const chkVersion = () => {
 						// pt.tiles = it.tiles.slice(0, 12);
 						pt.tilesOrder = it.tilesOrder;
 						pt.tilesPromise = load_tiles(pt);
-						Promise.all(Object.values(pt.tilesPromise)).then((res) => {
-							//self.postMessage({res: res, host: host, dmID: it.name, cmd: 'TilesData'});
-
-				console.log('tilesPromise ___:', hosts, res);
-							// _waitCheckObservers();
-						});
-/*
-*/
-						// pt.tilesPromise.then(res => {
-				// console.log('tilesPromise ___:', hosts, res);
-						// });
-				// console.log('chkVersion ___:', pt);
+						let event = new Event('tilesLoaded', {bubbles: true}); // (2)
+						event.detail = pt;
+						dispatchEvent(event);
 					});
-					// resolve(res.Result.Key !== 'null' ? '' : res.Result.Key);
-				// } else {
-					// reject(json);
-					// console.log('chkVersion key:', host, hosts);
 				} else if (res.Status === 'error') {
 					console.warn('Error: ', res);
 				}
@@ -199,8 +179,71 @@ const chkVersion = () => {
 	});
 };
 
+const repaintScreenTiles = (vt, pt, clearFlag) => {
+	let done = false;
+	if(pt.screen) {
+		Object.keys(pt.screen).forEach(tileKey => {
+			let st = pt.screen[tileKey];
+			if (st.coords.z === zoom) {
+				st.scale = scale;
+				let delta = 14 / scale;
+				let bounds = st.bounds;
+				const ctx = st.canvas.getContext("2d");
+				ctx.resetTransform();
+				ctx.transform(scale, 0, 0, -scale, -bounds.min.x * scale, bounds.max.y * scale);
+
+				if(vt.bounds.intersectsWithDelta(bounds, delta)) {
+					vt.values.forEach(it => {
+						const coords = it[it.length - 1].coordinates;
+						if (bounds.containsWithDelta(coords, delta)) {
+							Renderer.render2d(st, coords);
+							done = true;
+						}
+					});
+				}
+			// } else if (clearFlag) {
+				// delete pt.screen[tileKey];
+			}
+		});
+	}
+	return done;
+};
+
+const recheckVectorTiles = (pt, clearFlag) => {
+	let done = false;
+	if(pt.tilesPromise) {
+		Promise.all(Object.values(pt.tilesPromise)).then((res) => {
+			res.forEach(vt => {
+				done = repaintScreenTiles(vt, pt, clearFlag);
+			});
+		});
+	}
+	if(!done) {
+		// Renderer.render2dEmpty(st);
+	}
+	// self.postMessage({
+		// tileKey,
+		// layerId: pt.id,
+		// cmd: 'render',
+		// res: 'done'
+	// });
+};
+
+const redrawScreen = (clearFlag) => {
+	for (let host in hosts) {
+		let hostLayers = hosts[host];
+		let	ids = hostLayers.ids;
+		for (let id in ids) {
+			let pt = ids[id];
+			recheckVectorTiles(pt, clearFlag);
+		}
+	}
+};
+
+addEventListener('tilesLoaded', redrawScreen);
+
 onmessage = function(evt:MessageEvent) {    
-    console.log('dataManager', evt.data);
+    // console.log('dataManager', evt.data);
 	const data = evt.data || {};
 	const {cmd, layerId} = data;
 	let worker: Worker;
@@ -218,17 +261,25 @@ onmessage = function(evt:MessageEvent) {
 			const tileKey = [x,y,z].join(':');
 
 			if (id) {
-				let hostName = data.hostName || HOST;
+				let hostName = data.hostName || CONST.HOST;
 				if (hosts[hostName]) {
 					let it = hosts[hostName].ids[id];
 					if (!it.screen) { it.screen = {}; }
-					it.screen[tileKey] = {coords: data.coords, canvas: data.canvas};
+					let bounds = Requests.getTileBounds(data.coords);
+					it.screen[tileKey] = {
+						bounds: bounds,
+						coords: data.coords,
+						canvas: data.canvas
+					};
 				}
 			}
 			break;
 		case 'moveend':
+			//console.log('moveend', data);
 			zoom = data.zoom;
+			scale = data.scale;
 			bbox = data.bbox;
+			redrawScreen(true);
 			break;
 		default:
 			console.warn('Warning: Bad command ', data);
