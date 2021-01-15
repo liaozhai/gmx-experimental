@@ -1,4 +1,24 @@
-export default {
+const Renderer = {
+	render: (options:any, coords:Array<number>) => {
+		if (options.graphics) {
+			Renderer.renderGL(options, coords);
+		} else {
+			Renderer.render2d(options, coords);
+		}
+	},
+	renderGL: (options:any, coords:Array<number>) => {
+		const {scale, graphics, bounds} = options;        
+						// ctx.transform(scale, 0, 0, -scale, -bounds.min.x * scale, bounds.max.y * scale);
+
+		const x = (coords[0] - bounds.min.x) * scale;
+		const y = (bounds.max.y - coords[1]) * scale;
+		graphics.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
+		graphics.beginFill(0xDE3249, 1);
+		graphics.drawCircle(x, y, 50);
+		graphics.endFill();
+		
+		return true;
+	},
 	render2d: (options:any, coords:Array<number>) => {
 		const {scale, canvas} = options;        
 		const ctx = canvas.getContext("2d");
@@ -46,3 +66,4 @@ export default {
 		return true;
 	}
 };
+export default Renderer;

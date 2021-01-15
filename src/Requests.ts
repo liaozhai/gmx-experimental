@@ -560,6 +560,14 @@ export default {
 			[minx + tileSize + delta, miny + tileSize + delta]
 		]);
     },
+    isTileKeysIntersects: function(tk1, tk2) { // пересечение по номерам двух тайлов
+        if (tk1.z < tk2.z) {
+            var t = tk1; tk1 = tk2; tk2 = t;
+        }
+
+        var dz = tk1.z - tk2.z;
+        return tk1.x >> dz === tk2.x && tk1.y >> dz === tk2.y;
+	},
 
 	// geoItemBounds: utils.geoItemBounds,
 	chkSignal,

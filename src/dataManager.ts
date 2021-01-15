@@ -3,6 +3,35 @@ import Requests from './Requests';
 import load_tiles from './TilesLoader';
 import Renderer from './renderer2d';
 
+self.document = {
+  createElement(type) {
+    if (type === 'canvas') {
+      return new OffscreenCanvas(0, 0);
+    } else {
+      console.log('CreateElement called with type = ', type);
+
+      return {
+        style: {},
+      };
+    }
+  },
+
+  addEventListener() { },
+};
+
+self.window = {
+  console: self.console,
+  addEventListener() { },
+  navigator: {},
+  document: self.document,
+  removeEventListener: function () { },
+  WebGLRenderingContext: {}
+};
+
+importScripts(
+  'pixiv5_worker.js'
+);
+
 const hosts:any = {};
 let bbox:any = null;
 let zoom = 3;
@@ -161,7 +190,7 @@ const chkVersion = () => {
 						pt.tiles = it.tiles;
 						// pt.tiles = it.tiles.slice(0, 12);
 						pt.tilesOrder = it.tilesOrder;
-						pt.tilesPromise = load_tiles(pt);
+						pt.vTiles = load_tiles(pt);
 						let event = new Event('tilesLoaded', {bubbles: true}); // (2)
 						event.detail = pt;
 						dispatchEvent(event);
@@ -188,18 +217,28 @@ const repaintScreenTiles = (vt:any, pt:any, clearFlag:boolean) => {
 				st.scale = scale;
 				let delta = 14 / scale;
 				let bounds = st.bounds;
-				const ctx = st.canvas.getContext("2d");
-				ctx.resetTransform();
-				ctx.transform(scale, 0, 0, -scale, -bounds.min.x * scale, bounds.max.y * scale);
 
 				if(vt.bounds.intersectsWithDelta(bounds, delta)) {
+					if (!st.graphics) {
+						const ctx = st.canvas.getContext("2d");
+						ctx.resetTransform();
+						ctx.transform(scale, 0, 0, -scale, -bounds.min.x * scale, bounds.max.y * scale);
+					}
 					vt.values.forEach(it => {
 						const coords = it[it.length - 1].coordinates;
 						if (bounds.containsWithDelta(coords, delta)) {
-							Renderer.render2d(st, coords);
+							Renderer.render(st, coords);
 							done = true;
 						}
 					});
+					if (st.graphics) {
+						const app = new PIXI.Application({
+							view: st.canvas,
+							transparent: true,
+							antialias: true
+						});
+						app.stage.addChild(st.graphics);
+					}
 				}
 			// } else if (clearFlag) {
 				// delete pt.screen[tileKey];
@@ -211,8 +250,13 @@ const repaintScreenTiles = (vt:any, pt:any, clearFlag:boolean) => {
 
 const recheckVectorTiles = (pt:any, clearFlag:boolean) => {
 	let done = false;
-	if(pt.tilesPromise) {
-		Promise.all(Object.values(pt.tilesPromise)).then((res) => {
+	if(pt.vTiles) {
+		const arr = [];
+		for (let tkey in pt.vTiles) {
+			arr.push(pt.vTiles[tkey].promise);
+		}
+		// const {arr} = Object.values(pt.vTiles);
+		Promise.all(arr).then((res) => {
 			res.forEach(vt => {
 				done = repaintScreenTiles(vt, pt, clearFlag);
 			});
@@ -267,9 +311,17 @@ onmessage = function(evt:MessageEvent) {
 					if (!it.screen) { it.screen = {}; }
 					let bounds = Requests.getTileBounds(data.coords, 0);
 					it.screen[tileKey] = {
+						vtkeys: [],
 						bounds: bounds,
 						coords: data.coords,
+						// graphics: new PIXI.Graphics(),
 						canvas: data.canvas
+						// ,
+						// PIXIapp: new PIXI.Application({
+							// view: canvas,
+							// transparent: true,
+							// antialias: true
+						// })
 					};
 				}
 			}
