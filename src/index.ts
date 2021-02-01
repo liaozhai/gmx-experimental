@@ -6,7 +6,171 @@ import CONST from './const';
 
 const dataManager = new Worker("dataManager.js");
 
-const CanvasLayer = L.GridLayer.extend({
+const CanvasLayer = L.Layer.extend({
+	options: {
+		padding: 0.1,
+		projectionZoom: function (map) {return (map.getMaxZoom() + map.getMinZoom()) / 2;},
+		shouldRedrawOnMove: function () {return true;},
+	},
+
+	initialize: function (drawCallback, pixiContainer, options) {
+		L.setOptions(this, options);
+		L.stamp(this);
+		this._drawCallback = drawCallback;
+		// this._pixiContainer = pixiContainer;
+		// this._rendererOptions = {
+			// transparent: true,
+			// resolution: this.options.resolution,
+			// antialias: true,
+			// forceCanvas: this.options.forceCanvas,
+			// preserveDrawingBuffer: this.options.preserveDrawingBuffer,
+			// clearBeforeRender: this.options.clearBeforeRender
+		// };
+		// this._doubleBuffering = PIXI.utils.isWebGLSupported() && !this.options.forceCanvas &&
+			// this.options.doubleBuffering;
+	},
+	onAdd: function (targetMap) {
+		this._map = targetMap;
+		if (!this._container) {
+			var container = this._container = L.DomUtil.create('div', 'leaflet-pixi-overlay');
+			container.style.position = 'absolute';
+			// container.style.left = '-8px';
+			this._canvas = L.DomUtil.create('canvas', 'leaflet-canvas-overlay', container);
+			this.getPane().appendChild(this._container);
+			// this._renderer = PIXI.autoDetectRenderer(this._rendererOptions);
+			// setInteractionManager(
+				// this._renderer.plugins.interaction,
+				// this.options.destroyInteractionManager,
+				// this.options.autoPreventDefault
+			// );
+			// container.appendChild(this._renderer.view);
+			// if (this._zoomAnimated) {
+				// L.DomUtil.addClass(container, 'leaflet-zoom-animated');
+				// this._setContainerStyle();
+			// }
+			// if (this._doubleBuffering) {
+				// this._auxRenderer = PIXI.autoDetectRenderer(this._rendererOptions);
+				// setInteractionManager(
+					// this._auxRenderer.plugins.interaction,
+					// this.options.destroyInteractionManager,
+					// this.options.autoPreventDefault
+				// );
+				// container.appendChild(this._auxRenderer.view);
+				// this._renderer.view.style.position = 'absolute';
+				// this._auxRenderer.view.style.position = 'absolute';
+			// }
+		}
+		// this._addContainer();
+		// this._setEvents();
+
+		var map = this._map;
+		this._initialZoom = this.options.projectionZoom(map);
+		this._wgsOrigin = L.latLng([0, 0]);
+		this._wgsInitialShift = map.project(this._wgsOrigin, this._initialZoom);
+		this._mapInitialZoom = map.getZoom();
+		var _layer = this;
+		// map.on('resize', (e) => {
+			// console.log('resize', e);
+			// L.DomUtil.setTransform(this._container);
+		// }, this);
+
+		// this.utils = {
+			// latLngToLayerPoint: function (latLng, zoom) {
+				// zoom = (zoom === undefined) ? _layer._initialZoom : zoom;
+				// var projectedPoint = map.project(L.latLng(latLng), zoom);
+				// return projectedPoint;
+			// },
+			// layerPointToLatLng: function (point, zoom) {
+				// zoom = (zoom === undefined) ? _layer._initialZoom : zoom;
+				// var projectedPoint = L.point(point);
+				// return map.unproject(projectedPoint, zoom);
+			// },
+			// getScale: function (zoom) {
+				// if (zoom === undefined) return map.getZoomScale(map.getZoom(), _layer._initialZoom);
+				// else return map.getZoomScale(zoom, _layer._initialZoom);
+			// },
+			// getRenderer: function () {
+				// return _layer._renderer;
+			// },
+			// getContainer: function () {
+				// return _layer._pixiContainer;
+			// },
+			// getMap: function () {
+				// return _layer._map;
+			// }
+		// };
+		this._update({type: 'add'});
+	},
+
+	onRemove: function () {
+		L.DomUtil.remove(this._container);
+	},
+
+	getEvents: function () {
+		var events = {
+			zoom: this._onZoom,
+			move: this._onMove,
+			moveend: this._update
+		};
+		if (this._zoomAnimated) {
+			events.zoomanim = this._onAnimZoom;
+		}
+		return events;
+	},
+	_onZoom: function () {
+		this._updateTransform(this._map.getCenter(), this._map.getZoom());
+	},
+
+	_onAnimZoom: function (e) {
+		this._updateTransform(e.center, e.zoom);
+	},
+
+	_onMove: function(e) {
+		if (this.options.shouldRedrawOnMove(e)) {
+			this._update(e);
+		}
+	},
+
+	_updateTransform: function (center, zoom) {
+		var scale = this._map.getZoomScale(zoom, this._zoom),
+			viewHalf = this._map.getSize().multiplyBy(0.5 + this.options.padding),
+			currentCenterPoint = this._map.project(this._center, zoom),
+
+			topLeftOffset = viewHalf.multiplyBy(-scale).add(currentCenterPoint)
+				.subtract(this._map._getNewPixelOrigin(center, zoom));
+
+		if (L.Browser.any3d) {
+			L.DomUtil.setTransform(this._container, topLeftOffset, scale);
+		} else {
+			L.DomUtil.setPosition(this._container, topLeftOffset);
+		}
+	},
+
+	_update: function (e) {
+		if (this._map._animatingZoom && this._bounds) {return;}
+
+		// Update pixel bounds of renderer container
+		var mapSize = this._map.getSize(),
+			min = this._map.containerPointToLayerPoint(mapSize).round();
+
+		this._bounds = new L.Bounds(min, min.add(mapSize).round());
+		this._center = this._map.getCenter();
+		this._zoom = this._map.getZoom();
+		var b = this._bounds;
+		var container = this._container;
+		var size = b.getSize();
+		this._canvas.width = size.x;
+		this._canvas.height = size.y;
+		// отрисовка асинхронная - после нее выплняем код 
+				// L.DomUtil.setTransform(container);
+		L.DomUtil.setPosition(container, this._map._getMapPanePos().multiplyBy(-1));
+		// let mapPos = this._map._getMapPanePos();
+		// L.DomUtil.setPosition(container, {x: -mapPos.x, y: mapPos.y});
+
+	},
+});
+
+const CanvasLayerOld = L.GridLayer.extend({
 	options: {
 		layerId: ''
 	},
