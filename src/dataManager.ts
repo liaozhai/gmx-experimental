@@ -178,7 +178,7 @@ const chkVersion = () => {
 		res: 'done'
 	});
 };
-
+/*
 const repaintScreenTiles = (vt:any, pt:any, clearFlag:boolean) => {
 	let done = false;
 	if(pt.screen) {
@@ -205,18 +205,60 @@ const repaintScreenTiles = (vt:any, pt:any, clearFlag:boolean) => {
 				// delete pt.screen[tileKey];
 			}
 		});
+	} else if(pt.screenAll) {
+		const ctx = pt.screenAll.canvas.getContext("2d");
+		ctx.resetTransform();
+		ctx.transform(scale, 0, 0, -scale, -bbox[0][0] * scale, bbox[0][3] * scale);
+				pt.screenAll.scale = scale;
+					vt.values.forEach(it => {
+						const coords = it[it.length - 1].coordinates;
+						// if (bounds.containsWithDelta(coords, delta)) {
+							Renderer.render2d(pt.screenAll, coords);
+							done = true;
+						// }
+					});
 	}
 	return done;
 };
+*/
 
 const recheckVectorTiles = (pt:any, clearFlag:boolean) => {
 	let done = false;
 	if(pt.tilesPromise) {
-		Promise.all(Object.values(pt.tilesPromise)).then((res) => {
-			res.forEach(vt => {
-				done = repaintScreenTiles(vt, pt, clearFlag);
+		if(pt.screenAll) {
+			const canvas = pt.screenAll.canvas;
+			const ctx = canvas.getContext("2d");
+			ctx.resetTransform();
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.transform(scale, 0, 0, -scale, -bbox[0][0] * scale, bbox[0][3] * scale);
+			pt.screenAll.scale = scale;
+			let delta = 14 / scale;
+			let bounds = Requests.bounds(bbox[0]);
+			// let bounds = Requests.bounds([[bbox[0][0], bbox[0][1]], [bbox[0][2], bbox[0][3]]]);
+			console.log('pt.tilesPromise', Object.keys(pt.tilesPromise).length);
+			
+			Promise.all(Object.values(pt.tilesPromise)).then((res) => {
+				res.forEach(vt => {
+					if (bounds.intersectsWithDelta(vt.bounds, delta)) {
+						vt.values.forEach(it => {
+							const coords = it[it.length - 1].coordinates;
+							if (bounds.containsWithDelta(coords, delta)) {
+								Renderer.render2d(pt.screenAll, coords);
+							}
+						});
+					}
+				});
+			}).then((res) => {
+				bitmapToMain(pt.screenAll.id, canvas);
 			});
-		});
+			done = true;
+		// } else {
+			// Promise.all(Object.values(pt.tilesPromise)).then((res) => {
+				// res.forEach(vt => {
+					// done = repaintScreenTiles(vt, pt, clearFlag);
+				// });
+			// });
+		}
 	}
 	if(!done) {
 		// Renderer.render2dEmpty(st);
@@ -227,6 +269,15 @@ const recheckVectorTiles = (pt:any, clearFlag:boolean) => {
 		// cmd: 'render',
 		// res: 'done'
 	// });
+};
+
+const bitmapToMain = (layerId, canvas) => {
+	var imageData = canvas.transferToImageBitmap();
+	self.postMessage({
+		cmd: 'rendered',
+		layerId: layerId,
+		bitmap: imageData
+	}, [ imageData ]);
 };
 
 const redrawScreen = (clearFlag:boolean) => {
@@ -255,6 +306,20 @@ onmessage = function(evt:MessageEvent) {
 			data.worker = new Worker("renderer.js");
 			utils.addSource(data);			
 			break;
+		case 'drawScreen':
+			let id1 = data.id;
+			if (id1) {
+				let hostName = data.hostName || CONST.HOST;
+				if (hosts[hostName]) {
+					let it = hosts[hostName].ids[id1];
+					it.screenAll = {
+						canvas: new OffscreenCanvas(data.width, data.height),
+						id: id1,
+					};
+					redrawScreen(true);
+				}
+			}
+			break;
 		case 'drawTile':
 			let id = data.id;
 			const {x, y, z} = data.coords;
@@ -275,7 +340,7 @@ onmessage = function(evt:MessageEvent) {
 			}
 			break;
 		case 'moveend':
-			//console.log('moveend', data);
+			console.log('moveend', data);
 			zoom = data.zoom;
 			scale = data.scale;
 			bbox = data.bbox;

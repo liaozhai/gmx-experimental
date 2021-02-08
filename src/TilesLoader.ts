@@ -36,7 +36,7 @@ export default function (pars:any) {
 						}
 					}
 					json.bounds = Requests.bounds([[json.bbox[0], json.bbox[1]], [json.bbox[2], json.bbox[3]]]);
-					json.bounds1 = Requests.getTileBounds(json, 0);
+					json.boundsVtile = Requests.getTileBounds(json, 0);
 					return json;
 				})
 				.catch(err => {
